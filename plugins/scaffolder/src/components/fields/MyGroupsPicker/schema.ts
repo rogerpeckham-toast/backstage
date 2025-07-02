@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-import { makeFieldSchema } from '@backstage/plugin-scaffolder-react';
+import { EntityPickerFieldSchema } from '../EntityPicker/schema.ts';
 
 /**
  * Field schema for the MyGroupsPicker.
  * @public
  */
 
-export const MyGroupsPickerFieldSchema = makeFieldSchema({
-  output: z => z.string(),
-});
-
+export const MyGroupsPickerFieldSchema = EntityPickerFieldSchema;
 /**
  * UI options for the MyGroupsPicker.
  * @public

@@ -14,30 +14,16 @@
  * limitations under the License.
  */
 
-import { ChangeEvent, useEffect } from 'react';
-import {
-  errorApiRef,
-  identityApiRef,
-  useApi,
-} from '@backstage/core-plugin-api';
-import TextField from '@material-ui/core/TextField';
-import { MyGroupsPickerProps, MyGroupsPickerSchema } from './schema';
-import Autocomplete, {
-  createFilterOptions,
-} from '@material-ui/lab/Autocomplete';
-import {
-  catalogApiRef,
-  EntityDisplayName,
-  entityPresentationApiRef,
-  EntityRefPresentationSnapshot,
-} from '@backstage/plugin-catalog-react';
-import { NotFoundError } from '@backstage/errors';
+import { identityApiRef, useApi } from '@backstage/core-plugin-api';
 import useAsync from 'react-use/esm/useAsync';
-import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
-import { VirtualizedListbox } from '../VirtualizedListbox';
+import { MyGroupsPickerProps, MyGroupsPickerSchema } from './schema';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { scaffolderTranslationRef } from '../../../translation';
+import { EntityPicker } from '../EntityPicker/EntityPicker';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import TextField from '@material-ui/core/TextField';
 import { ScaffolderField } from '@backstage/plugin-scaffolder-react/alpha';
+import { RELATION_HAS_MEMBER } from '@backstage/catalog-model';
 
 export { MyGroupsPickerSchema };
 
@@ -48,107 +34,100 @@ export const MyGroupsPicker = (props: MyGroupsPickerProps) => {
       title = t('fields.myGroupsPicker.title'),
       description = t('fields.myGroupsPicker.description'),
     },
-    required,
-    rawErrors,
-    onChange,
-    formData,
     uiSchema,
-    errors,
+    required,
   } = props;
 
   const identityApi = useApi(identityApiRef);
-  const catalogApi = useApi(catalogApiRef);
-  const errorApi = useApi(errorApiRef);
-  const entityPresentationApi = useApi(entityPresentationApiRef);
-  const isDisabled = uiSchema?.['ui:disabled'] ?? false;
-
-  const { value: groups, loading } = useAsync(async () => {
-    const { userEntityRef } = await identityApi.getBackstageIdentity();
-
-    if (!userEntityRef) {
-      errorApi.post(new NotFoundError('No user entity ref found'));
-      return { catalogEntities: [], entityRefToPresentation: new Map() };
-    }
-
-    const { items } = await catalogApi.getEntities({
-      filter: {
-        kind: 'Group',
-        ['relations.hasMember']: [userEntityRef],
-      },
-    });
-
-    const entityRefToPresentation = new Map<
-      string,
-      EntityRefPresentationSnapshot
-    >(
-      await Promise.all(
-        items.map(async item => {
-          const presentation = await entityPresentationApi.forEntity(item)
-            .promise;
-          return [stringifyEntityRef(item), presentation] as [
-            string,
-            EntityRefPresentationSnapshot,
-          ];
-        }),
-      ),
-    );
-
-    return { catalogEntities: items, entityRefToPresentation };
+  const { loading, value: identityRef } = useAsync(async () => {
+    const identity = await identityApi.getBackstageIdentity();
+    return identity.userEntityRef;
   });
 
-  const updateChange = (_: ChangeEvent<{}>, value: Entity | null) => {
-    onChange(value ? stringifyEntityRef(value) : '');
-  };
+  // const catalogFilter = lodash.merge(uiSchema['ui:options']?.catalogFilter ?? {}, {
+  //   kind: ['Group'],
+  //   'relations.hasMember': [userEntityRef!],
+  // });
 
-  const selectedEntity =
-    groups?.catalogEntities.find(e => stringifyEntityRef(e) === formData) ||
-    null;
+  // const myGroupsUiSchema = {
+  //   ...uiSchema,
+  //   'ui:options': {
+  //     catalogFilter,
+  //     defaultKind: 'Group',
+  //     allowArbitraryValues:
+  //       uiSchema['ui:options']?.allowArbitraryValues ?? true,
+  //   },
+  // };
 
-  useEffect(() => {
-    if (required && groups?.catalogEntities.length === 1 && !selectedEntity) {
-      onChange(stringifyEntityRef(groups.catalogEntities[0]));
-    }
-  }, [groups, onChange, selectedEntity, required]);
+  if (loading)
+    return (
+      <ScaffolderField
+        rawDescription={uiSchema['ui:description'] ?? description}
+        required={required}
+        disabled={uiSchema['ui:disabled']}
+      >
+        <Autocomplete
+          loading={loading}
+          renderInput={params => (
+            <TextField
+              {...params}
+              label={title}
+              margin="dense"
+              FormHelperTextProps={{
+                margin: 'dense',
+                style: { marginLeft: 0 },
+              }}
+              variant="outlined"
+              required={required}
+              InputProps={params.InputProps}
+            />
+          )}
+          options={[]}
+        />
+      </ScaffolderField>
+    );
 
-  return (
-    <ScaffolderField
-      rawErrors={rawErrors}
-      rawDescription={uiSchema['ui:description'] ?? description}
-      required={required}
-      disabled={isDisabled}
-      errors={errors}
-    >
-      <Autocomplete
-        disabled={required && groups?.catalogEntities.length === 1}
-        id="OwnershipEntityRefPicker-dropdown"
-        options={groups?.catalogEntities || []}
-        value={selectedEntity}
-        loading={loading}
-        onChange={updateChange}
-        getOptionLabel={option =>
-          groups?.entityRefToPresentation.get(stringifyEntityRef(option))
-            ?.primaryTitle!
-        }
-        autoSelect
-        renderInput={params => (
-          <TextField
-            {...params}
-            label={title}
-            margin="dense"
-            FormHelperTextProps={{ margin: 'dense', style: { marginLeft: 0 } }}
-            variant="outlined"
-            required={required}
-            InputProps={params.InputProps}
-          />
-        )}
-        renderOption={option => <EntityDisplayName entityRef={option} />}
-        filterOptions={createFilterOptions<Entity>({
-          stringify: option =>
-            groups?.entityRefToPresentation.get(stringifyEntityRef(option))
-              ?.primaryTitle!,
-        })}
-        ListboxComponent={VirtualizedListbox}
-      />
-    </ScaffolderField>
-  );
+  const entityPickerUISchema = buildEntityPickerUISchema(uiSchema, identityRef);
+
+  return <EntityPicker {...props} uiSchema={entityPickerUISchema} />;
 };
+
+/**
+ * Builds a `uiSchema` for an `EntityPicker` from a parent `OwnedEntityPicker`.
+ * Migrates deprecated parameters such as `allowedKinds` to `catalogFilter` structure.
+ *
+ * @param uiSchema The `uiSchema` of an `OwnedEntityPicker` component.
+ * @param identityRef The user identityRef.
+ * @returns The `uiSchema` for an `EntityPicker` component.
+ */
+function buildEntityPickerUISchema(
+  uiSchema: MyGroupsPickerProps['uiSchema'],
+  identityRef: string | undefined,
+): MyGroupsPickerProps['uiSchema'] {
+  // Note: This is typed to avoid es-lint rule TS2698
+  const uiOptions: MyGroupsPickerProps['uiSchema']['ui:options'] =
+    uiSchema?.['ui:options'] || {};
+  const { allowedKinds, ...extraOptions } = uiOptions;
+
+  const catalogFilter = asArray(uiOptions.catalogFilter).map(e => ({
+    ...e,
+    ...(allowedKinds ? { kind: allowedKinds } : {}),
+    [`relations.${RELATION_HAS_MEMBER}`]: identityRef || '',
+    type: 'team',
+  }));
+
+  return {
+    'ui:options': {
+      ...extraOptions,
+      catalogFilter,
+      allowArbitraryValues: uiOptions.allowArbitraryValues ?? true,
+    },
+  };
+}
+
+function asArray(catalogFilter: any): any[] {
+  if (catalogFilter) {
+    return Array.isArray(catalogFilter) ? catalogFilter : [catalogFilter];
+  }
+  return [{}];
+}
