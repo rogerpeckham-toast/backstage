@@ -126,10 +126,21 @@ describe('<MyGroupsPicker />', () => {
     );
 
     expect(catalogApi.getEntities).toHaveBeenCalledWith({
-      filter: {
-        kind: 'Group',
-        'relations.hasMember': ['user:default/bob'],
-      },
+      fields: [
+        'kind',
+        'metadata.name',
+        'metadata.namespace',
+        'metadata.title',
+        'metadata.description',
+        'spec.profile.displayName',
+        'spec.type',
+      ],
+      filter: [
+        {
+          kind: 'Group',
+          'relations.hasMember': 'user:default/bob',
+        },
+      ],
     });
 
     // Check that getEntities was set up to return the correct data

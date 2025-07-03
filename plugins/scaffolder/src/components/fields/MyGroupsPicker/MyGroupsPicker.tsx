@@ -89,14 +89,19 @@ export const MyGroupsPicker = (props: MyGroupsPickerProps) => {
 
   const entityPickerUISchema = buildEntityPickerUISchema(uiSchema, identityRef);
 
-  return <EntityPicker {...props} uiSchema={entityPickerUISchema} />;
+  return (
+    <EntityPicker
+      {...props}
+      schema={{ title, description }}
+      uiSchema={entityPickerUISchema}
+    />
+  );
 };
 
 /**
- * Builds a `uiSchema` for an `EntityPicker` from a parent `OwnedEntityPicker`.
- * Migrates deprecated parameters such as `allowedKinds` to `catalogFilter` structure.
+ * Builds a `uiSchema` for an `EntityPicker` from a parent `MyGroupsPicker`.
  *
- * @param uiSchema The `uiSchema` of an `OwnedEntityPicker` component.
+ * @param uiSchema The `uiSchema` of an `MyGroupsPicker` component.
  * @param identityRef The user identityRef.
  * @returns The `uiSchema` for an `EntityPicker` component.
  */
@@ -107,11 +112,10 @@ function buildEntityPickerUISchema(
   // Note: This is typed to avoid es-lint rule TS2698
   const uiOptions: MyGroupsPickerProps['uiSchema']['ui:options'] =
     uiSchema?.['ui:options'] || {};
-  const { allowedKinds, ...extraOptions } = uiOptions;
-
+  const { ...extraOptions } = uiOptions;
   const catalogFilter = asArray(uiOptions.catalogFilter).map(e => ({
     ...e,
-    ...(allowedKinds ? { kind: allowedKinds } : {}),
+    ...{ kind: 'Group' },
     [`relations.${RELATION_HAS_MEMBER}`]: identityRef || '',
   }));
 

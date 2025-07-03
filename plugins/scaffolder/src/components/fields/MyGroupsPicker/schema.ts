@@ -14,14 +14,35 @@
  * limitations under the License.
  */
 
-import { EntityPickerFieldSchema } from '../EntityPicker/schema.ts';
+import { makeFieldSchema } from '@backstage/plugin-scaffolder-react';
+import { createEntityQueryFilterExpressionSchema } from '../EntityPicker/schema.ts';
 
 /**
  * Field schema for the MyGroupsPicker.
  * @public
  */
 
-export const MyGroupsPickerFieldSchema = EntityPickerFieldSchema;
+export const MyGroupsPickerFieldSchema = makeFieldSchema({
+  output: z => z.string(),
+  uiOptions: z =>
+    z.object({
+      allowArbitraryValues: z
+        .boolean()
+        .optional()
+        .describe('Whether to allow arbitrary user input. Defaults to true'),
+      defaultNamespace: z
+        .union([z.string(), z.literal(false)])
+        .optional()
+        .describe(
+          'The default namespace. Options with this namespace will not be prefixed.',
+        ),
+      catalogFilter: (t => t.or(t.array()))(
+        createEntityQueryFilterExpressionSchema(z),
+      )
+        .optional()
+        .describe('List of key-value filter expression for entities'),
+    }),
+});
 /**
  * UI options for the MyGroupsPicker.
  * @public
