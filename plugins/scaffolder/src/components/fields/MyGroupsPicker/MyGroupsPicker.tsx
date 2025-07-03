@@ -113,7 +113,6 @@ function buildEntityPickerUISchema(
     ...e,
     ...(allowedKinds ? { kind: allowedKinds } : {}),
     [`relations.${RELATION_HAS_MEMBER}`]: identityRef || '',
-    type: 'team',
   }));
 
   return {
