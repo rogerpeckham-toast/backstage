@@ -26,16 +26,6 @@ export const MyGroupsPickerFieldSchema = makeFieldSchema({
   output: z => z.string(),
   uiOptions: z =>
     z.object({
-      allowArbitraryValues: z
-        .boolean()
-        .optional()
-        .describe('Whether to allow arbitrary user input. Defaults to true'),
-      defaultNamespace: z
-        .union([z.string(), z.literal(false)])
-        .optional()
-        .describe(
-          'The default namespace. Options with this namespace will not be prefixed.',
-        ),
       catalogFilter: (t => t.or(t.array()))(
         createEntityQueryFilterExpressionSchema(z),
       )
