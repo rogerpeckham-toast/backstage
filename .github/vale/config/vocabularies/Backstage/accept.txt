@@ -21,9 +21,9 @@ asciidoc
 async
 Atlassian
 autofix
+autologout
 automations
 autoscaling
-Autoscaling
 autoselect
 Avro
 backend's
@@ -47,8 +47,10 @@ bundler
 bundlers
 bursty
 callout
+camelCase
 CDNs
 Chai
+Chainguard
 changeset
 changesets
 Changesets
@@ -57,6 +59,7 @@ Chanwit
 CI/CD
 classname
 cli
+CLIs
 cloudbuild
 Cloudflare
 Cloudformation
@@ -96,6 +99,7 @@ dataflow
 dataloader
 dayjs
 debounce
+debounced
 debounces
 debuggability
 declaratively
@@ -108,6 +112,7 @@ dependabot
 deps
 dequeue
 dequeueing
+dereferencing
 deserialization
 destructured
 destructuring
@@ -146,6 +151,7 @@ etag
 Expedia
 facto
 failover
+faq
 Fargate
 faqs
 featureful
@@ -177,6 +183,7 @@ graphql
 GraphQL
 graphviz
 Hackathons
+hackathon
 haproxy
 hardcoded
 hardcoding
@@ -220,11 +227,13 @@ jq
 js
 json
 jsonnet
+JSONSchema
 jsx
 JWTs
 Kaewkasi
 Kaswell
 keepalive
+Keycloak
 Keyv
 Knex
 knip
@@ -260,6 +269,7 @@ maintainer's
 maintainership
 makefile
 Matomo
+matchers
 md
 memcache
 memoization
@@ -319,6 +329,7 @@ onboarded
 onboarding
 Onboarding
 onelogin
+openapi
 OpenSearch
 OpenShift
 openssl
@@ -334,6 +345,7 @@ parallelization
 param
 params
 parseable
+passwordless
 Patrik
 pattison
 Peloton
@@ -417,6 +429,7 @@ sanitization
 scaffolded
 scaffolder
 Scaffolder
+scalprum
 SCM
 SCMs
 scrollable
@@ -467,6 +480,8 @@ subheaders
 subkey
 subpage
 subpath
+subpaths
+subroute
 subroutes
 substring
 subtree
@@ -491,11 +506,13 @@ templaters
 Templaters
 TFRecord
 theia
+Themer
 threenager
 thumbsup
 todo
 todos
 togglable
+tokenizer
 tolerations
 Tolerations
 toolchain
@@ -508,8 +525,10 @@ transpile
 transpiled
 transpiler
 transpilers
+trixie
 truthy
 tsconfig
+Turbopack
 TSDoc
 typeahead
 ui
@@ -522,6 +541,7 @@ unmount
 unregister
 unregistering
 unregistration
+unreviewed
 unstarred
 untemplated
 untracked
@@ -561,3 +581,5 @@ Zolotusky
 zoomable
 zsh
 resizable
+enums
+LLMs

@@ -18,59 +18,58 @@ import {
   Row as ReactAriaRow,
   RowProps,
   useTableOptions,
-  Cell,
+  Cell as ReactAriaCell,
   Collection,
-  Checkbox,
-  RouterProvider,
 } from 'react-aria-components';
+import { Checkbox } from '../../Checkbox';
 import { useStyles } from '../../../hooks/useStyles';
-import { useNavigate } from 'react-router-dom';
-import { useHref } from 'react-router-dom';
+import { TableDefinition } from '../definition';
 import { isExternalLink } from '../../../utils/isExternalLink';
+import { InternalLinkProvider } from '../../InternalLinkProvider';
+import styles from '../Table.module.css';
+import clsx from 'clsx';
+import { Flex } from '../../Flex';
 
 /** @public */
-export function Row<T extends object>({
-  id,
-  columns,
-  children,
-  href,
-  ...otherProps
-}: RowProps<T>) {
-  const { classNames } = useStyles('Table');
-  const navigate = useNavigate();
-  const isExternal = isExternalLink(href);
+export function Row<T extends object>(props: RowProps<T>) {
+  const { classNames, cleanedProps } = useStyles(TableDefinition, props);
+  const { id, columns, children, href, ...rest } = cleanedProps;
+  const hasInternalHref = !!href && !isExternalLink(href);
 
-  let { selectionBehavior } = useTableOptions();
+  let { selectionBehavior, selectionMode } = useTableOptions();
 
   const content = (
     <>
-      {selectionBehavior === 'toggle' && (
-        <Cell>
-          <Checkbox slot="selection" />
-        </Cell>
+      {selectionBehavior === 'toggle' && selectionMode === 'multiple' && (
+        <ReactAriaCell
+          className={clsx(
+            classNames.cellSelection,
+            styles[classNames.cell],
+            styles[classNames.cellSelection],
+          )}
+        >
+          <Flex justify="center" align="center">
+            <Checkbox slot="selection">
+              <></>
+            </Checkbox>
+          </Flex>
+        </ReactAriaCell>
       )}
       <Collection items={columns}>{children}</Collection>
     </>
   );
 
-  if (isExternal) {
-    return (
-      <ReactAriaRow id={id} className={classNames.row} {...otherProps}>
-        {content}
-      </ReactAriaRow>
-    );
-  }
-
   return (
-    <RouterProvider navigate={navigate} useHref={useHref}>
+    <InternalLinkProvider href={href}>
       <ReactAriaRow
         id={id}
-        className={classNames.row}
-        data-react-aria-pressable="true"
-        {...otherProps}
+        href={href}
+        className={clsx(classNames.row, styles[classNames.row])}
+        data-react-aria-pressable={hasInternalHref ? 'true' : undefined}
+        {...rest}
       >
         {content}
       </ReactAriaRow>
-    </RouterProvider>
+    </InternalLinkProvider>
   );
 }

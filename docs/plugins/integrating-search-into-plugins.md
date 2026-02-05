@@ -237,7 +237,7 @@ backend.start();
 
 #### 8. Testing the collator code
 
-To verify your implementation works as expected make sure to add tests for it. For your convenience, there is the [`TestPipeline`](https://backstage.io/docs/reference/plugin-search-backend-node.testpipeline) utility that emulates a pipeline into which you can integrate your custom collator.
+To verify your implementation works as expected make sure to add tests for it. For your convenience, there is the [`TestPipeline`](https://backstage.io/api/stable/classes/_backstage_plugin-search-backend-node.index.TestPipeline.html) utility that emulates a pipeline into which you can integrate your custom collator.
 
 Look at [DefaultTechDocsCollatorFactory test](https://github.com/backstage/backstage/blob/de294ce5c410c9eb56da6870a1fab795268f60e3/plugins/techdocs-backend/src/search/DefaultTechDocsCollatorFactory.test.ts), for an example.
 
@@ -248,7 +248,7 @@ You can also check out the documentation on [how to test Backstage plugin module
 Run `yarn start` in the root folder of your Backstage project and look for logs like these:
 
 ```sh
-[backend]: YYYY-MM-DDTHH:MM:SS.000Z search info Task worker starting: search_index_faq_snippets, {"version":2,"cadence":"PT10M","initialDelayDuration":"PT3S","timeoutAfterDuration":"PT15M"} task=search_index_faq_snippets
+[backend]: YYYY-MM-DDTHH:MM:SS.000Z search info Registered scheduled task: search_index_faq_snippets, {"version":2,"cadence":"PT10M","initialDelayDuration":"PT3S","timeoutAfterDuration":"PT15M"} task=search_index_faq_snippets
 [backend]: YYYY-MM-DDTHH:MM:SS.000Z search info Collating documents for faq-snippets via FaqSnippetsCollatorFactory documentType=faq-snippets
 [backend]: YYYY-MM-DDTHH:MM:SS.000Z search info Fetching faq snippets from https://backstage.example.biz/faq-snippets
 [backend]: YYYY-MM-DDTHH:MM:SS.000Z search info Collating documents for faq-snippets succeeded documentType=faq-snippets
@@ -282,7 +282,7 @@ search experience.
   of state necessary to perform search queries and display any results. As
   inputs to the query are updated (e.g. a `term` or `filter` values), the
   updated query is executed and `results` are refreshed. Check out the
-  [SearchContextValue](https://backstage.io/docs/reference/plugin-search-react.searchcontextvalue)
+  [SearchContextValue](https://backstage.io/api/stable/types/_backstage_plugin-search-react.index.SearchContextValue.html)
   for details.
 - The aforementioned state can be modified and/or consumed via the
   `useSearch()` hook, also exported by `@backstage/plugin-search-react`.

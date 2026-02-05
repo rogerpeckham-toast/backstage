@@ -22,7 +22,7 @@ import {
   mockServices,
   registerMswTestHooks,
 } from '@backstage/backend-test-utils';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { DateTime } from 'luxon';
 import { v4 as uuid } from 'uuid';
@@ -38,13 +38,14 @@ interface AnyJWK extends Record<string, string> {
 }
 class FakeTokenFactory {
   private readonly keys = new Array<AnyJWK>();
+  private readonly options: {
+    issuer: string;
+    keyDurationSeconds: number;
+  };
 
-  constructor(
-    private readonly options: {
-      issuer: string;
-      keyDurationSeconds: number;
-    },
-  ) {}
+  constructor(options: { issuer: string; keyDurationSeconds: number }) {
+    this.options = options;
+  }
 
   async issueToken(params: {
     claims: {

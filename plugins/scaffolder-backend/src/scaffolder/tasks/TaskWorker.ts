@@ -28,7 +28,7 @@ import PQueue from 'p-queue';
 import { TemplateActionRegistry } from '../actions/TemplateActionRegistry';
 import { NunjucksWorkflowRunner } from './NunjucksWorkflowRunner';
 import { WorkflowRunner } from './types';
-import { setTimeout } from 'timers/promises';
+import { setTimeout } from 'node:timers/promises';
 import { JsonObject } from '@backstage/types';
 import { Config } from '@backstage/config';
 
@@ -90,11 +90,16 @@ export class TaskWorker {
   private parameterAuditTransform: ParameterAuditTransform;
   private stopWorkers: boolean;
 
+  private readonly options: TaskWorkerOptions & {
+    parameterAuditTransform: ParameterAuditTransform;
+  };
+
   private constructor(
-    private readonly options: TaskWorkerOptions & {
+    options: TaskWorkerOptions & {
       parameterAuditTransform: ParameterAuditTransform;
     },
   ) {
+    this.options = options;
     this.stopWorkers = false;
     this.logger = options.logger;
     this.auditor = options.auditor;
@@ -129,6 +134,7 @@ export class TaskWorker {
       additionalTemplateFilters,
       additionalTemplateGlobals,
       permissions,
+      config,
     });
 
     return new TaskWorker({

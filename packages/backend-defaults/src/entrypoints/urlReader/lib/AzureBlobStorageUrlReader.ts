@@ -26,8 +26,8 @@ import {
   ForwardedError,
   NotModifiedError,
 } from '@backstage/errors';
-import { Readable } from 'stream';
-import { relative } from 'path/posix';
+import { Readable } from 'node:stream';
+import { relative } from 'node:path/posix';
 import { ReadUrlResponseFactory } from './ReadUrlResponseFactory';
 import {
   AzureBlobStorageIntergation,
@@ -91,13 +91,23 @@ export class AzureBlobStorageUrlReader implements UrlReaderService {
 
   // private readonly blobServiceClient: BlobServiceClient;
 
+  private readonly credsManager: AzureCredentialsManager;
+  private readonly integration: AzureBlobStorageIntergation;
+  private readonly deps: {
+    treeResponseFactory: ReadTreeResponseFactory;
+  };
+
   constructor(
-    private readonly credsManager: AzureCredentialsManager,
-    private readonly integration: AzureBlobStorageIntergation,
-    private readonly deps: {
+    credsManager: AzureCredentialsManager,
+    integration: AzureBlobStorageIntergation,
+    deps: {
       treeResponseFactory: ReadTreeResponseFactory;
     },
-  ) {}
+  ) {
+    this.credsManager = credsManager;
+    this.integration = integration;
+    this.deps = deps;
+  }
 
   private async createContainerClient(
     containerName: string,

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { convertLegacyRouteRefs } from '@backstage/core-compat-api';
 import { createFrontendPlugin } from '@backstage/frontend-plugin-api';
 import {
   actionsRouteRef,
@@ -36,13 +35,14 @@ import {
   ownedEntityPickerFormField,
   ownerPickerFormField,
   repoBranchPickerFormField,
+  repoOwnerPickerFormField,
   repoUrlPickerFormField,
   scaffolderApi,
   scaffolderNavItem,
   scaffolderPage,
 } from './extensions';
 import { isTemplateEntityV1beta3 } from '@backstage/plugin-scaffolder-common';
-import { formFieldsApi } from '@backstage/plugin-scaffolder-react/alpha';
+import { formFieldsApi } from './formFieldsApi';
 import { formDecoratorsApi } from './api';
 import { EntityIconLinkBlueprint } from '@backstage/plugin-catalog-react/alpha';
 import { useScaffolderTemplateIconLinkProps } from './hooks/useScaffolderTemplateIconLinkProps';
@@ -60,7 +60,7 @@ const scaffolderEntityIconLink = EntityIconLinkBlueprint.make({
 export default createFrontendPlugin({
   pluginId: 'scaffolder',
   info: { packageJson: () => import('../../package.json') },
-  routes: convertLegacyRouteRefs({
+  routes: {
     root: rootRouteRef,
     selectedTemplate: selectedTemplateRouteRef,
     ongoingTask: scaffolderTaskRouteRef,
@@ -68,11 +68,11 @@ export default createFrontendPlugin({
     listTasks: scaffolderListTaskRouteRef,
     edit: editRouteRef,
     templatingExtensions: templatingExtensionsRouteRef,
-  }),
-  externalRoutes: convertLegacyRouteRefs({
+  },
+  externalRoutes: {
     registerComponent: registerComponentRouteRef,
     viewTechDoc: viewTechDocRouteRef,
-  }),
+  },
   extensions: [
     scaffolderApi,
     scaffolderPage,
@@ -89,5 +89,6 @@ export default createFrontendPlugin({
     myGroupsPickerFormField,
     ownedEntityPickerFormField,
     repoBranchPickerFormField,
+    repoOwnerPickerFormField,
   ],
 });

@@ -15,8 +15,8 @@
  */
 import { paths as cliPaths } from '../../lib/paths';
 import pLimit from 'p-limit';
-import os from 'os';
-import { relative as relativePath, resolve as resolvePath } from 'path';
+import os from 'node:os';
+import { relative as relativePath, resolve as resolvePath } from 'node:path';
 import fs from 'fs-extra';
 import type { KnipConfig } from 'knip';
 import { createBinRunner } from '../util';
@@ -58,7 +58,7 @@ async function generateKnipConfig({ knipConfigPath }: KnipConfigOptions) {
     workspaces: {
       '.': {},
       '{packages,plugins}/*': {
-        entry: ['dev/index.{ts,tsx}', 'src/index.{ts,tsx}'],
+        entry: ['dev/**/*.{ts,tsx}', 'src/index.{ts,tsx}'],
         ignore: [
           '.eslintrc.js',
           'config.d.ts',

@@ -20,37 +20,42 @@ import {
   TagList as ReactAriaTagList,
   Tag as ReactAriaTag,
   Button as ReactAriaButton,
-  RouterProvider,
 } from 'react-aria-components';
 import type { ReactNode } from 'react';
 import { RiCloseCircleLine } from '@remixicon/react';
 import clsx from 'clsx';
 import { useStyles } from '../../hooks/useStyles';
-import { isExternalLink } from '../../utils/isExternalLink';
-import { useNavigate, useHref } from 'react-router-dom';
+import { TagGroupDefinition } from './definition';
+import { createRoutingRegistration } from '../InternalLinkProvider';
+import styles from './TagGroup.module.css';
+
+const { RoutingProvider, useRoutingRegistrationEffect } =
+  createRoutingRegistration();
 
 /**
  * A component that renders a list of tags.
  *
  * @public
  */
-export const TagGroup = <T extends object>({
-  items,
-  children,
-  renderEmptyState,
-  ...props
-}: TagGroupProps<T>) => {
-  const { classNames } = useStyles('TagGroup');
+export const TagGroup = <T extends object>(props: TagGroupProps<T>) => {
+  const { classNames, cleanedProps } = useStyles(TagGroupDefinition, props);
+  const { items, children, renderEmptyState, ...rest } = cleanedProps;
+
   return (
-    <ReactAriaTagGroup className={classNames.group} {...props}>
-      <ReactAriaTagList
-        className={classNames.list}
-        items={items}
-        renderEmptyState={renderEmptyState}
+    <RoutingProvider>
+      <ReactAriaTagGroup
+        className={clsx(classNames.group, styles[classNames.group])}
+        {...rest}
       >
-        {children}
-      </ReactAriaTagList>
-    </ReactAriaTagGroup>
+        <ReactAriaTagList
+          className={clsx(classNames.list, styles[classNames.list])}
+          items={items}
+          renderEmptyState={renderEmptyState}
+        >
+          {children}
+        </ReactAriaTagList>
+      </ReactAriaTagGroup>
+    </RoutingProvider>
   );
 };
 
@@ -60,28 +65,39 @@ export const TagGroup = <T extends object>({
  * @public
  */
 export const Tag = (props: TagProps) => {
-  const { children, className, icon, size = 'small', href, ...rest } = props;
+  const { classNames, cleanedProps } = useStyles(TagGroupDefinition, {
+    size: 'small',
+    ...props,
+  });
+  const { children, className, icon, size, href, ...rest } = cleanedProps;
   const textValue = typeof children === 'string' ? children : undefined;
-  const { classNames } = useStyles('TagGroup');
-  const navigate = useNavigate();
-  const isLink = href !== undefined;
-  const isExternal = isExternalLink(href);
 
-  const content = (
+  useRoutingRegistrationEffect(href);
+
+  return (
     <ReactAriaTag
       textValue={textValue}
-      className={clsx(classNames.tag, className)}
+      className={clsx(classNames.tag, styles[classNames.tag], className)}
       data-size={size}
       href={href}
       {...rest}
     >
       {({ allowsRemoving }) => (
         <>
-          {icon && <span className={classNames.tagIcon}>{icon}</span>}
+          {icon && (
+            <span
+              className={clsx(classNames.tagIcon, styles[classNames.tagIcon])}
+            >
+              {icon}
+            </span>
+          )}
           {children as ReactNode}
           {allowsRemoving && (
             <ReactAriaButton
-              className={classNames.tagRemoveButton}
+              className={clsx(
+                classNames.tagRemoveButton,
+                styles[classNames.tagRemoveButton],
+              )}
               slot="remove"
             >
               <RiCloseCircleLine size={16} />
@@ -91,14 +107,4 @@ export const Tag = (props: TagProps) => {
       )}
     </ReactAriaTag>
   );
-
-  if (isLink && !isExternal) {
-    return (
-      <RouterProvider navigate={navigate} useHref={useHref}>
-        {content}
-      </RouterProvider>
-    );
-  }
-
-  return content;
 };

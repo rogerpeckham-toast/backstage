@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import path from 'path';
+import path from 'node:path';
 import { getPackages, Package } from '@manypkg/get-packages';
-import { paths } from '../util';
+import { paths } from '../paths';
 import { PackageRole } from '../roles';
 import { GitUtils } from '../git';
 import { Lockfile } from './Lockfile';
@@ -90,6 +90,12 @@ export interface BackstagePackageJson {
      * All packages that are part of the plugin. Must always and only be set for plugin packages and plugin library packages.
      */
     pluginPackages?: string[];
+
+    /**
+     * Module packages that should be installed alongside this plugin for cross-plugin integrations.
+     * If the peer module's target plugin is present, you should have the peer module installed.
+     */
+    peerModules?: string[];
 
     /**
      * The feature types exported from the package, indexed by path.

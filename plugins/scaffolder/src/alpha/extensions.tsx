@@ -15,10 +15,6 @@
  */
 
 import {
-  compatWrapper,
-  convertLegacyRouteRef,
-} from '@backstage/core-compat-api';
-import {
   ApiBlueprint,
   createExtensionInput,
   discoveryApiRef,
@@ -33,6 +29,7 @@ import { FormFieldBlueprint } from '@backstage/plugin-scaffolder-react/alpha';
 import { scmIntegrationsApiRef } from '@backstage/integration-react';
 import { scaffolderApiRef } from '@backstage/plugin-scaffolder-react';
 import { ScaffolderClient } from '../api';
+import { formFieldsApiRef } from './formFieldsApi';
 
 export const scaffolderPage = PageBlueprint.makeWithOverrides({
   inputs: {
@@ -40,26 +37,36 @@ export const scaffolderPage = PageBlueprint.makeWithOverrides({
       FormFieldBlueprint.dataRefs.formFieldLoader,
     ]),
   },
-  factory(originalFactory, { inputs }) {
-    const formFieldLoaders = inputs.formFields.map(i =>
-      i.get(FormFieldBlueprint.dataRefs.formFieldLoader),
-    );
+  factory(originalFactory, { apis, inputs }) {
+    const formFieldsApi = apis.get(formFieldsApiRef);
+
     return originalFactory({
-      routeRef: convertLegacyRouteRef(rootRouteRef),
+      routeRef: rootRouteRef,
       path: '/create',
-      loader: () =>
-        import('../components/Router/Router').then(m =>
-          compatWrapper(
-            <m.InternalRouter formFieldLoaders={formFieldLoaders} />,
-          ),
-        ),
+      loader: async () => {
+        // Merge form fields from the API with old-style direct attachments
+        const apiFormFields = (await formFieldsApi?.loadFormFields()) ?? [];
+        const formFieldLoaders = inputs.formFields.map(output =>
+          output.get(FormFieldBlueprint.dataRefs.formFieldLoader),
+        );
+
+        // Resolve direct attachments and combine with API form fields
+        const loadedFormFields = await Promise.all(
+          formFieldLoaders.map(loader => loader()),
+        );
+        const formFields = [...apiFormFields, ...loadedFormFields];
+
+        return import('../components/Router/Router').then(m => (
+          <m.InternalRouter formFields={formFields} />
+        ));
+      },
     });
   },
 });
 
 export const scaffolderNavItem = NavItemBlueprint.make({
   params: {
-    routeRef: convertLegacyRouteRef(rootRouteRef),
+    routeRef: rootRouteRef,
     title: 'Create...',
     icon: CreateComponentIcon,
   },
@@ -130,6 +137,14 @@ export const repoBranchPickerFormField = FormFieldBlueprint.make({
   params: {
     field: () =>
       import('./fields/RepoBranchPicker').then(m => m.RepoBranchPicker),
+  },
+});
+
+export const repoOwnerPickerFormField = FormFieldBlueprint.make({
+  name: 'repo-owner-picker',
+  params: {
+    field: () =>
+      import('./fields/RepoOwnerPicker').then(m => m.RepoOwnerPicker),
   },
 });
 

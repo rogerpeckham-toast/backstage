@@ -18,7 +18,10 @@ import {
   OpaqueExtensionDefinition,
   OpaqueFrontendPlugin,
 } from '@internal/frontend';
-import { ExtensionDefinition } from './createExtension';
+import {
+  ExtensionDefinition,
+  OverridableExtensionDefinition,
+} from './createExtension';
 import {
   Extension,
   resolveExtensionDefinition,
@@ -27,6 +30,7 @@ import { FeatureFlagConfig } from './types';
 import { MakeSortedExtensionsMap } from './MakeSortedExtensionsMap';
 import { JsonObject } from '@backstage/types';
 import { RouteRef, SubRouteRef, ExternalRouteRef } from '../routing';
+import { ID_PATTERN } from './constants';
 
 /**
  * Information about the plugin.
@@ -104,7 +108,9 @@ export interface OverridableFrontendPlugin<
     [id in string]: ExtensionDefinition;
   },
 > extends FrontendPlugin<TRoutes, TExternalRoutes> {
-  getExtension<TId extends keyof TExtensionMap>(id: TId): TExtensionMap[TId];
+  getExtension<TId extends keyof TExtensionMap>(
+    id: TId,
+  ): OverridableExtensionDefinition<TExtensionMap[TId]['T']>;
   withOverrides(options: {
     extensions: Array<ExtensionDefinition>;
 
@@ -125,6 +131,15 @@ export interface FrontendPlugin<
   },
 > {
   readonly $$type: '@backstage/FrontendPlugin';
+  /**
+   * The plugin ID.
+   */
+  readonly pluginId: string;
+  /**
+   * Deprecated alias for `pluginId`.
+   *
+   * @deprecated Use `pluginId` instead.
+   */
   readonly id: string;
   readonly routes: TRoutes;
   readonly externalRoutes: TExternalRoutes;
@@ -194,6 +209,13 @@ export function createFrontendPlugin<
 > {
   const pluginId = options.pluginId;
 
+  if (!ID_PATTERN.test(pluginId)) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `WARNING: The pluginId '${pluginId}' will be invalid soon, please change it to match the pattern ${ID_PATTERN} (letters, digits, and dashes only, starting with a letter)`,
+    );
+  }
+
   const extensions = new Array<Extension<any>>();
   const extensionDefinitionsById = new Map<
     string,
@@ -226,6 +248,7 @@ export function createFrontendPlugin<
   }
 
   return OpaqueFrontendPlugin.createInstance('v1', {
+    pluginId,
     id: pluginId,
     routes: options.routes ?? ({} as TRoutes),
     externalRoutes: options.externalRoutes ?? ({} as TExternalRoutes),

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useState, useRef } from 'react';
 import {
   Input,
   SearchField as AriaSearchField,
@@ -25,6 +25,8 @@ import { FieldLabel } from '../FieldLabel';
 import { FieldError } from '../FieldError';
 import { RiSearch2Line, RiCloseCircleLine } from '@remixicon/react';
 import { useStyles } from '../../hooks/useStyles';
+import { SearchFieldDefinition } from './definition';
+import styles from './SearchField.module.css';
 
 import type { SearchFieldProps } from './types';
 
@@ -32,23 +34,10 @@ import type { SearchFieldProps } from './types';
 export const SearchField = forwardRef<HTMLDivElement, SearchFieldProps>(
   (props, ref) => {
     const {
-      className,
-      icon,
-      size = 'small',
       label,
-      secondaryLabel,
-      description,
-      isRequired,
-      onChange,
-      placeholder = 'Search',
-      startCollapsed = false,
       'aria-label': ariaLabel,
       'aria-labelledby': ariaLabelledBy,
-      ...rest
     } = props;
-
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const [shouldCollapse, setShouldCollapse] = useState(true);
 
     useEffect(() => {
       if (!label && !ariaLabel && !ariaLabelledBy) {
@@ -58,54 +47,60 @@ export const SearchField = forwardRef<HTMLDivElement, SearchFieldProps>(
       }
     }, [label, ariaLabel, ariaLabelledBy]);
 
-    const { classNames: textFieldClassNames, dataAttributes } = useStyles(
-      'TextField',
+    const { classNames, dataAttributes, style, cleanedProps } = useStyles(
+      SearchFieldDefinition,
       {
-        size,
+        size: 'small',
+        placeholder: 'Search',
+        startCollapsed: false,
+        ...props,
       },
     );
 
-    const { classNames: searchFieldClassNames } = useStyles('SearchField', {});
+    const {
+      className,
+      description,
+      icon,
+      isRequired,
+      secondaryLabel,
+      placeholder,
+      startCollapsed,
+      ...rest
+    } = cleanedProps;
+
+    const [isFocused, setIsFocused] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // If a secondary label is provided, use it. Otherwise, use 'Required' if the field is required.
     const secondaryLabelText =
       secondaryLabel || (isRequired ? 'Required' : null);
 
-    const handleClick = (isFocused: boolean) => {
+    const handleFocusChange = (isFocused: boolean) => {
       props.onFocusChange?.(isFocused);
-      if (shouldCollapse) {
-        if (isFocused) {
-          setIsCollapsed(true);
-        } else {
-          setIsCollapsed(false);
-        }
-      }
+      setIsFocused(isFocused);
     };
 
-    const handleChange = (value: string) => {
-      props.onChange?.(value);
-      if (value.length > 0) {
-        setShouldCollapse(false);
-      } else {
-        setShouldCollapse(true);
-      }
+    const handleContainerClick = () => {
+      inputRef.current?.focus();
     };
+
+    const hasInputRef = !!inputRef.current;
+    const hasValue = !!inputRef.current?.value;
+
+    const isCollapsed = hasInputRef
+      ? startCollapsed && !hasValue && !isFocused
+      : startCollapsed && !rest.value && !rest.defaultValue && !isFocused;
 
     return (
       <AriaSearchField
-        className={clsx(
-          textFieldClassNames.root,
-          searchFieldClassNames.root,
-          className,
-        )}
+        className={clsx(classNames.root, styles[classNames.root], className)}
         {...dataAttributes}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
-        data-start-collapsed={startCollapsed}
         data-collapsed={isCollapsed}
-        onFocusChange={handleClick}
-        onChange={handleChange}
+        style={style}
         {...rest}
+        onFocusChange={handleFocusChange}
         ref={ref}
       >
         <FieldLabel
@@ -114,12 +109,19 @@ export const SearchField = forwardRef<HTMLDivElement, SearchFieldProps>(
           description={description}
         />
         <div
-          className={textFieldClassNames.inputWrapper}
+          className={clsx(
+            classNames.inputWrapper,
+            styles[classNames.inputWrapper],
+          )}
           data-size={dataAttributes['data-size']}
+          onClick={handleContainerClick}
         >
           {icon !== false && (
             <div
-              className={textFieldClassNames.inputIcon}
+              className={clsx(
+                classNames.inputIcon,
+                styles[classNames.inputIcon],
+              )}
               data-size={dataAttributes['data-size']}
               aria-hidden="true"
             >
@@ -127,12 +129,13 @@ export const SearchField = forwardRef<HTMLDivElement, SearchFieldProps>(
             </div>
           )}
           <Input
-            className={textFieldClassNames.input}
+            ref={inputRef}
+            className={clsx(classNames.input, styles[classNames.input])}
             {...(icon !== false && { 'data-icon': true })}
             placeholder={placeholder}
           />
           <Button
-            className={searchFieldClassNames.clear}
+            className={clsx(classNames.clear, styles[classNames.clear])}
             data-size={dataAttributes['data-size']}
           >
             <RiCloseCircleLine />
